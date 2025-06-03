@@ -698,14 +698,15 @@ class _CalculatorState extends State<Calculator> {
 
   Future<void> _saveCalculation() async {
     try {
-      // Complete any pending calculation first
+      // 1. 檢查是否有運算符號需要計算
       if (previousValue.isNotEmpty && operation.isNotEmpty) {
+        // 執行計算
         performCalculation();
-        // Wait for the next frame to ensure state is updated
+        // 等待狀態更新
         await Future.delayed(Duration.zero);
       }
 
-      // If display is empty or shows an error, don't save
+      // 2. 檢查顯示是否為空或錯誤
       if (display.isEmpty || display == "Error") {
         if (mounted) {
           _showSnackBar('沒有可儲存的計算結果');
@@ -713,22 +714,21 @@ class _CalculatorState extends State<Calculator> {
         return;
       }
 
-      // Create a record with the current calculation and result
+      // 3. 儲存顯示的數字
       final record = CalculationRecord.create(
-        expression: calculation.isNotEmpty ? calculation : display,
+        expression: display,
         result: display,
       );
 
       await HiveDatabaseService.saveCalculation(record);
-
-      _showSnackBar('已儲存計算結果');
-
-      // Clear the calculation state after saving
-      setState(() {
-        calculation = '';
-      });
+      
+      if (mounted) {
+        _showSnackBar('已儲存計算結果');
+      }
     } catch (e) {
-      _showSnackBar('儲存失敗: ${e.toString()}', isError: true);
+      if (mounted) {
+        _showSnackBar('儲存失敗: ${e.toString()}', isError: true);
+      }
     }
   }
 
